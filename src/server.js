@@ -13,5 +13,7 @@ app.use(express.json());
 
 const usersRouter = require('./routes/users');
 app.use('/users', usersRouter);
+const pacientsRouter = require('./routes/pacients');
+app.use('/pacients', pacientsRouter);
 
 app.listen(process.env.PORT, () => console.log('Server started'));
