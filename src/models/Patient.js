@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 
-const pacientSchema = mongoose.Schema({
+const patientSchema = mongoose.Schema({
     name: String,
     species: String,
     breed: String,
@@ -8,4 +8,4 @@ const pacientSchema = mongoose.Schema({
     tutor: mongoose.SchemaTypes.ObjectId,
 });
 
-module.exports = mongoose.model('Pacient', pacientSchema);
+module.exports = mongoose.model('Patient', patientSchema);
