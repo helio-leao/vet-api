@@ -14,17 +14,17 @@ router.get('/', authenticateToken, async (req, res) => {
     }
 });
 
-router.get('/:id', getPatients, (req, res) => {
+router.get('/:id', authenticateToken, getPatient, (req, res) => {
     res.json(res.patient);
 });
 
-router.post('/', async (req, res) => {
+router.post('/', authenticateToken, async (req, res) => {
     const newPatient = new Patient({
         name: req.body.name,
         species: req.body.species,
         breed: req.body.breed,
         birthdate: req.body.birthdate,
-        user: req.body.user,
+        user: req.user.id,
     });
 
     try {
@@ -35,7 +35,7 @@ router.post('/', async (req, res) => {
     }
 });
 
-router.patch('/:id', getPatients, async (req, res) => {
+router.patch('/:id', authenticateToken, getPatient, async (req, res) => {
     if(req.body.name) {
         res.patient.name = req.body.name;
     }
@@ -48,9 +48,9 @@ router.patch('/:id', getPatients, async (req, res) => {
     if(req.body.birthdate) {
         res.patient.birthdate = req.body.birthdate;
     }
-    if(req.body.user) {
-        res.patient.user = req.body.user;
-    }
+    // if(req.body.user) {
+    //     res.patient.user = req.body.user;
+    // }
 
     try {
         const updatedPatient = await res.patient.save();
@@ -60,7 +60,7 @@ router.patch('/:id', getPatients, async (req, res) => {
     }
 });
 
-router.delete('/:id', getPatients, async (req, res) => {
+router.delete('/:id', authenticateToken, getPatient, async (req, res) => {
     try {
         await res.patient.deleteOne();
         res.json({ message: 'Deleted patient' });
@@ -70,11 +70,11 @@ router.delete('/:id', getPatients, async (req, res) => {
 });
 
 
-async function getPatients(req, res, next) {
+async function getPatient(req, res, next) {
     let patient;
 
     try {
-        patient = await Patient.findById(req.params.id);
+        patient = await Patient.findOne({ _id: req.params.id, user: req.user.id });
         if(!patient) {
             return res.status(404).json({ message: 'Cannot find patient' });
         }

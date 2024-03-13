@@ -30,7 +30,7 @@ router.post('/', async (req, res) => {
     }
 });
 
-router.patch('/:id', getExams, async (req, res) => {
+router.patch('/:id', getExam, async (req, res) => {
     if(req.body.type) {
         res.exam.type = req.body.type;
     }
@@ -52,7 +52,7 @@ router.patch('/:id', getExams, async (req, res) => {
     }
 });
 
-router.delete('/:id', getExams, async (req, res) => {
+router.delete('/:id', getExam, async (req, res) => {
     try {
         await res.exam.deleteOne();
         res.json({ message: 'Deleted exam' });
@@ -62,7 +62,7 @@ router.delete('/:id', getExams, async (req, res) => {
 });
 
 
-async function getExams(req, res, next) {
+async function getExam(req, res, next) {
     let exam;
 
     try {
