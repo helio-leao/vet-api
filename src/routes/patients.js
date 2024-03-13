@@ -6,10 +6,8 @@ const Patient = require('../models/Patient');
 
 
 router.get('/', authenticateToken, async (req, res) => {
-    console.log(req.user)
     try {
-        // const patients = await Patient.find();
-        const patients = await Patient.find({ tutor: req.user.id });
+        const patients = await Patient.find({ user: req.user.id });
         res.json(patients);
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -26,7 +24,7 @@ router.post('/', async (req, res) => {
         species: req.body.species,
         breed: req.body.breed,
         birthdate: req.body.birthdate,
-        tutor: req.body.tutor,
+        user: req.body.user,
     });
 
     try {
@@ -50,8 +48,8 @@ router.patch('/:id', getPatients, async (req, res) => {
     if(req.body.birthdate) {
         res.patient.birthdate = req.body.birthdate;
     }
-    if(req.body.tutor) {
-        res.patient.tutor = req.body.tutor;
+    if(req.body.user) {
+        res.patient.user = req.body.user;
     }
 
     try {

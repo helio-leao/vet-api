@@ -5,7 +5,7 @@ const patientSchema = mongoose.Schema({
     species: String,
     breed: String,
     birthdate: Date,
-    tutor: mongoose.SchemaTypes.ObjectId,
+    user: mongoose.SchemaTypes.ObjectId,
 });
 
 module.exports = mongoose.model('Patient', patientSchema);
