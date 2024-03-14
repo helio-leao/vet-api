@@ -14,6 +14,11 @@ const patientSchema = mongoose.Schema({
         type: String,
         lowercase: true,
     },
+    tutorName: {
+        type: String,
+        lowercase: true,
+    },
+    pictureUrl: String,
     birthdate: Date,
     user: {
         type: mongoose.SchemaTypes.ObjectId,

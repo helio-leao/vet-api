@@ -25,6 +25,8 @@ router.post('/', authenticateToken, async (req, res) => {
         breed: req.body.breed,
         birthdate: req.body.birthdate,
         user: req.user.id,
+        tutorName: req.body.tutorName,
+        pictureUrl: req.body.pictureUrl,
     });
 
     try {
@@ -51,6 +53,12 @@ router.patch('/:id', authenticateToken, getPatient, async (req, res) => {
     // if(req.body.user) {
     //     res.patient.user = req.body.user;
     // }
+    if(req.body.tutorName) {
+        res.patient.tutorName = req.body.tutorName;
+    }
+    if(req.body.pictureUrl) {
+        res.patient.pictureUrl = req.body.pictureUrl;
+    }
 
     try {
         const updatedPatient = await res.patient.save();
