@@ -19,6 +19,7 @@ const patientSchema = mongoose.Schema({
         lowercase: true,
     },
     pictureUrl: String,
+    healthDescription: String,
     birthdate: Date,
     user: {
         type: mongoose.SchemaTypes.ObjectId,

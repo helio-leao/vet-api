@@ -27,6 +27,7 @@ router.post('/', authenticateToken, async (req, res) => {
         user: req.user.id,
         tutorName: req.body.tutorName,
         pictureUrl: req.body.pictureUrl,
+        healthDescription: req.body.healthDescription,
     });
 
     try {
@@ -58,6 +59,9 @@ router.patch('/:id', authenticateToken, getPatient, async (req, res) => {
     }
     if(req.body.pictureUrl) {
         res.patient.pictureUrl = req.body.pictureUrl;
+    }
+    if(req.body.healthDescription) {
+        res.patient.healthDescription = req.body.healthDescription;
     }
 
     try {
