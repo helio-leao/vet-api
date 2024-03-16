@@ -6,7 +6,7 @@ const Exam = require('../models/Exam');
 
 router.get('/:patientId', async (req, res) => {
     try {
-        const exams = await Exam.find({ patient: req.params.patientId });
+        const exams = await Exam.find({ patient: req.params.patientId }).sort('date');
         res.json(exams);
     } catch (error) {
         res.status(500).json({ message: error.message });

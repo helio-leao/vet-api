@@ -6,10 +6,7 @@ const examSchema = mongoose.Schema({
         required: true,
         lowercase: true,
     },
-    unit: {
-        type: String,
-        required: true,
-    },
+    unit: String,
     date: {
         type: Date,
         required: true,
