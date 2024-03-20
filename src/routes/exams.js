@@ -1,8 +1,30 @@
 const express = require('express');
 const router = express.Router();
 
-const Exam = require('../models/Exam');
+const authenticateToken = require('../middlewares/authenticateToken');
 
+const Exam = require('../models/Exam');
+const Patient = require('../models/Patient');
+
+
+router.get('/notifications', authenticateToken, async (req, res) => {
+    try {
+        const patients = await Patient.find({ user: req.user.id });
+        
+        if(patients.length === 0) return res.json([]);
+
+        const patientsIds = patients.map(patient => patient.id);
+
+        const exams = await Exam.find({
+            patient: { $in: patientsIds },
+            notificationStatus: { $ne: "DISMISSED" },
+        }).sort('-date');
+
+        res.json(exams);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
 
 router.get('/:patientId', async (req, res) => {
     try {
