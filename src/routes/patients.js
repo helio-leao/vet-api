@@ -3,7 +3,17 @@ const router = express.Router();
 const authenticateToken = require('../middlewares/authenticateToken');
 
 const Patient = require('../models/Patient');
+const Exam = require('../models/Exam');
 
+
+router.get('/:id/exams', async (req, res) => {
+    try {
+        const exams = await Exam.find({ patient: req.params.id }).sort({date: 1});
+        res.json(exams);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
 
 router.get('/', authenticateToken, async (req, res) => {
     try {
@@ -51,9 +61,6 @@ router.patch('/:id', authenticateToken, getPatient, async (req, res) => {
     if(req.body.birthdate) {
         res.patient.birthdate = req.body.birthdate;
     }
-    // if(req.body.user) {
-    //     res.patient.user = req.body.user;
-    // }
     if(req.body.tutorName) {
         res.patient.tutorName = req.body.tutorName;
     }

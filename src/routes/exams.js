@@ -1,39 +1,10 @@
 const express = require('express');
 const router = express.Router();
-
-const authenticateToken = require('../middlewares/authenticateToken');
+const mongoose = require('mongoose');
 
 const Exam = require('../models/Exam');
-const Patient = require('../models/Patient');
+const Notification = require('../models/Notification');
 
-
-router.get('/notifications', authenticateToken, async (req, res) => {
-    try {
-        const patients = await Patient.find({ user: req.user.id });
-        
-        if(patients.length === 0) return res.json([]);
-
-        const patientsIds = patients.map(patient => patient.id);
-
-        const exams = await Exam.find({
-            patient: { $in: patientsIds },
-            notificationStatus: { $ne: "DISMISSED" },
-        }).sort('-date');
-
-        res.json(exams);
-    } catch (error) {
-        res.status(500).json({ message: error.message });
-    }
-});
-
-router.get('/:patientId', async (req, res) => {
-    try {
-        const exams = await Exam.find({ patient: req.params.patientId }).sort('date');
-        res.json(exams);
-    } catch (error) {
-        res.status(500).json({ message: error.message });
-    }
-});
 
 router.post('/', async (req, res) => {
     const newExam = new Exam({
@@ -44,11 +15,28 @@ router.post('/', async (req, res) => {
         patient: req.body.patient,
     });
 
+    const newNotification = new Notification({
+        message: `Taxa de ${newExam.type} atualizada para ${newExam.result} ${newExam.unit}`,
+        exam: newExam.id,
+    });
+
+    
+    const session = await mongoose.startSession();
+    session.startTransaction();
+    
     try {
-        await newExam.save();
+        await newExam.save({ session: session });
+        await newNotification.save({ session: session });
+
+        await session.commitTransaction();
+
         res.status(201).json(newExam);
     } catch (error) {
+        await session.abortTransaction();
+
         res.status(400).json({ message: error.message });
+    } finally {
+        session.endSession();
     }
 });
 

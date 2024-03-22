@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 
+
 const examSchema = mongoose.Schema({
     type: {
         type: String,
@@ -15,15 +16,12 @@ const examSchema = mongoose.Schema({
         type: Number,
         required: true,
     },
-    notificationStatus: {
-        type: String,
-        default: 'UNREAD',
-    },
     patient: {
         type: mongoose.SchemaTypes.ObjectId,
         ref: 'Patient',
         required: true,
     },
 });
+
 
 module.exports = mongoose.model('Exam', examSchema);

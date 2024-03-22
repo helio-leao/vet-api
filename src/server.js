@@ -17,6 +17,8 @@ const patientsRouter = require('./routes/patients');
 app.use('/patients', patientsRouter);
 const examsRouter = require('./routes/exams');
 app.use('/exams', examsRouter);
+const notificationsRouter = require('./routes/notifications');
+app.use('/notifications', notificationsRouter);
 const authRouter = require('./routes/auth');
 app.use('/auth', authRouter);
 
