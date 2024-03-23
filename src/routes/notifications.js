@@ -33,7 +33,7 @@ router.get('/', authenticateToken, async (req, res) => {
                 }
             }, {
                 '$match': {
-                    'exam.patient.user': new mongoose.Types.ObjectId('65ea1e6e499fc7cba7ff197a')
+                    'exam.patient.user': new mongoose.Types.ObjectId(req.user.id)
                 }
             }, {
                 '$sort': {
