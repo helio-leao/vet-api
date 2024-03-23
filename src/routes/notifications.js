@@ -15,14 +15,14 @@ router.get('/', authenticateToken, async (req, res) => {
                     path: 'patient',
                     match: { user: req.user.id },
                 }
-            })
-            .sort({date: -1})
-            .exec();
+            });
 
-        const filteredNotifications = notifications.filter(
+        const formatedNotifications = notifications.filter(
             notification => notification.exam.patient !== null);
+        const sortedNotifications = formatedNotifications.sort(
+            (a, b) => b.exam.date - a.exam.date);
 
-        res.json(filteredNotifications);
+        res.json(sortedNotifications);
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
