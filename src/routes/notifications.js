@@ -1,28 +1,48 @@
 const express = require('express');
 const router = express.Router();
+const mongoose = require('mongoose');
 const authenticateToken = require('../middlewares/authenticateToken');
 
 const Notification = require('../models/Notification');
 
 
-// todo: query by user id
 router.get('/', authenticateToken, async (req, res) => {
     try {
-        const notifications = await Notification.find()
-            .populate({
-                path: 'exam',
-                populate: {
-                    path: 'patient',
-                    match: { user: req.user.id },
+        const notifications = await Notification.aggregate([
+            {
+                '$lookup': {
+                    'from': 'exams', 
+                    'localField': 'exam', 
+                    'foreignField': '_id', 
+                    'as': 'exam'
                 }
-            });
+            }, {
+                '$unwind': {
+                    'path': '$exam'
+                }
+            }, {
+                '$lookup': {
+                    'from': 'patients', 
+                    'localField': 'exam.patient', 
+                    'foreignField': '_id', 
+                    'as': 'exam.patient'
+                }
+            }, {
+                '$unwind': {
+                    'path': '$exam.patient'
+                }
+            }, {
+                '$match': {
+                    'exam.patient.user': new mongoose.Types.ObjectId('65ea1e6e499fc7cba7ff197a')
+                }
+            }, {
+                '$sort': {
+                    'exam.date': -1
+                }
+            }
+        ]);
 
-        const formatedNotifications = notifications.filter(
-            notification => notification.exam.patient !== null);
-        const sortedNotifications = formatedNotifications.sort(
-            (a, b) => b.exam.date - a.exam.date);
-
-        res.json(sortedNotifications);
+        res.json(notifications);
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
