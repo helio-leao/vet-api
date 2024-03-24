@@ -1,7 +1,7 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 
-const patientSchema = mongoose.Schema({
+const patientSchema = new mongoose.Schema({
     name: {
         type: String,
         required: true,

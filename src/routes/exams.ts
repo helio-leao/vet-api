@@ -1,4 +1,4 @@
-import express from 'express';
+import express, { Request, Response, NextFunction } from 'express';
 import mongoose from 'mongoose';
 import Exam from '../models/Exam';
 import Notification from '../models/Notification';
@@ -62,7 +62,7 @@ router.patch('/:id', getExam, async (req, res) => {
     }
 });
 
-router.delete('/:id', getExam, async (req, res) => {
+router.delete('/:id', getExam, async (_req, res) => {
     try {
         await res.exam.deleteOne();
         res.json({ message: 'Deleted exam' });
@@ -72,7 +72,7 @@ router.delete('/:id', getExam, async (req, res) => {
 });
 
 
-async function getExam(req, res, next) {
+async function getExam(req: Request, res: Response, next: NextFunction) {
     let exam;
 
     try {

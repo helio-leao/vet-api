@@ -1,4 +1,4 @@
-import express from 'express';
+import express, { Request, Response, NextFunction } from 'express';
 import authenticateToken from '../middlewares/authenticateToken';
 import Patient from '../models/Patient';
 import Exam from '../models/Exam';
@@ -24,7 +24,7 @@ router.get('/', authenticateToken, async (req, res) => {
     }
 });
 
-router.get('/:id', authenticateToken, getPatient, (req, res) => {
+router.get('/:id', authenticateToken, getPatient, (_req, res) => {
     res.json(res.patient);
 });
 
@@ -79,7 +79,7 @@ router.patch('/:id', authenticateToken, getPatient, async (req, res) => {
     }
 });
 
-router.delete('/:id', authenticateToken, getPatient, async (req, res) => {
+router.delete('/:id', authenticateToken, getPatient, async (_req, res) => {
     try {
         await res.patient.deleteOne();
         res.json({ message: 'Deleted patient' });
@@ -89,7 +89,7 @@ router.delete('/:id', authenticateToken, getPatient, async (req, res) => {
 });
 
 
-async function getPatient(req, res, next) {
+async function getPatient(req: Request, res: Response, next: NextFunction) {
     let patient;
 
     try {

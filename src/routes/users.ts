@@ -1,10 +1,10 @@
-import express from 'express';
+import express, { Request, Response, NextFunction } from 'express';
 import User from '../models/User';
 
 const router = express.Router();
 
 
-router.get('/', async (req, res) => {
+router.get('/', async (_req, res) => {
     try {
         const users = await User.find();
         res.json(users);
@@ -13,7 +13,7 @@ router.get('/', async (req, res) => {
     }
 });
 
-router.get('/:id', getUser, (req, res) => {
+router.get('/:id', getUser, (_req, res) => {
     res.json(res.user);
 });
 
@@ -47,7 +47,7 @@ router.patch('/:id', getUser, async (req, res) => {
     }
 });
 
-router.delete('/:id', getUser, async (req, res) => {
+router.delete('/:id', getUser, async (_req, res) => {
     try {
         await res.user.deleteOne();
         res.json({ message: 'Deleted user' });
@@ -57,7 +57,7 @@ router.delete('/:id', getUser, async (req, res) => {
 });
 
 
-async function getUser(req, res, next) {
+async function getUser(req: Request, res: Response, next: NextFunction) {
     let user;
 
     try {
