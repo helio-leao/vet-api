@@ -1,9 +1,9 @@
-const express = require('express');
-const router = express.Router();
-const mongoose = require('mongoose');
-const authenticateToken = require('../middlewares/authenticateToken');
+import express from 'express';
+import mongoose from 'mongoose';
+import authenticateToken from '../middlewares/authenticateToken';
+import Notification from '../models/Notification';
 
-const Notification = require('../models/Notification');
+const router = express.Router();
 
 
 router.get('/', authenticateToken, async (req, res) => {
@@ -80,4 +80,4 @@ router.put('/update-many-notification-status', authenticateToken, async (req, re
 });
 
 
-module.exports = router;
+export default router;

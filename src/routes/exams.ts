@@ -1,9 +1,9 @@
-const express = require('express');
-const router = express.Router();
-const mongoose = require('mongoose');
+import express from 'express';
+import mongoose from 'mongoose';
+import Exam from '../models/Exam';
+import Notification from '../models/Notification';
 
-const Exam = require('../models/Exam');
-const Notification = require('../models/Notification');
+const router = express.Router();
 
 
 router.post('/', async (req, res) => {
@@ -89,4 +89,4 @@ async function getExam(req, res, next) {
 }
 
 
-module.exports = router;
+export default router;

@@ -30,4 +30,4 @@ const patientSchema = mongoose.Schema({
 });
 
 
-module.exports = mongoose.model('Patient', patientSchema);
+export default mongoose.model('Patient', patientSchema);

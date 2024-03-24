@@ -1,23 +1,24 @@
-const express = require('express');
+import express from 'express';
+import mongoose from 'mongoose';
+import usersRouter from './routes/users';
+import patientsRouter from './routes/patients';
+import examsRouter from './routes/exams';
+import notificationsRouter from './routes/notifications';
+import authRouter from './routes/auth';
+
 const app = express();
 
-const mongoose = require('mongoose');
+app.use(express.json());
+
 mongoose.connect(process.env.DATABASE_URL);
 const db = mongoose.connection
 db.on('error', error => console.error(error));
 db.once('open', () => console.log('Connected to database'));
 
-app.use(express.json());
-
-const usersRouter = require('./routes/users');
 app.use('/users', usersRouter);
-const patientsRouter = require('./routes/patients');
 app.use('/patients', patientsRouter);
-const examsRouter = require('./routes/exams');
 app.use('/exams', examsRouter);
-const notificationsRouter = require('./routes/notifications');
 app.use('/notifications', notificationsRouter);
-const authRouter = require('./routes/auth');
 app.use('/auth', authRouter);
 
 app.listen(process.env.PORT, () => console.log('Server started'));

@@ -1,9 +1,9 @@
-const express = require('express');
-const router = express.Router();
-const authenticateToken = require('../middlewares/authenticateToken');
+import express from 'express';
+import authenticateToken from '../middlewares/authenticateToken';
+import Patient from '../models/Patient';
+import Exam from '../models/Exam';
 
-const Patient = require('../models/Patient');
-const Exam = require('../models/Exam');
+const router = express.Router();
 
 
 router.get('/:id/exams', async (req, res) => {
@@ -106,4 +106,4 @@ async function getPatient(req, res, next) {
 }
 
 
-module.exports = router;
+export default router;

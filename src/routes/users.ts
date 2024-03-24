@@ -1,7 +1,7 @@
-const express = require('express');
-const router = express.Router();
+import express from 'express';
+import User from '../models/User';
 
-const User = require('../models/User');
+const router = express.Router();
 
 
 router.get('/', async (req, res) => {
@@ -74,4 +74,4 @@ async function getUser(req, res, next) {
 }
 
 
-module.exports = router;
+export default router;
