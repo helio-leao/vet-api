@@ -1,6 +1,6 @@
 import express, { Request, Response, NextFunction } from 'express';
 import mongoose from 'mongoose';
-import Exam from '../models/Exam';
+import Exam, { IExam } from '../models/Exam';
 import Notification from '../models/Notification';
 
 const router = express.Router();
@@ -14,29 +14,38 @@ router.post('/', async (req, res) => {
         result: req.body.result,
         patient: req.body.patient,
     });
-
-    const newNotification = new Notification({
-        message: `Taxa de ${newExam.type} atualizada para ${newExam.result} ${newExam.unit}`,
-        exam: newExam.id,
-    });
-
     
-    const session = await mongoose.startSession();
-    session.startTransaction();
+    const notificationMessage = generateNotificationMessage(newExam);
     
-    try {
-        await newExam.save({ session: session });
-        await newNotification.save({ session: session });
+    if(notificationMessage) {
+        const newNotification = new Notification({
+            message: notificationMessage,
+            exam: newExam.id,
+        });
 
-        await session.commitTransaction();
-
-        res.status(201).json(newExam);
-    } catch {
-        await session.abortTransaction();
-        res.sendStatus(400);
-    } finally {
-        session.endSession();
-    }
+        const session = await mongoose.startSession();
+        session.startTransaction();
+        
+        try {
+            await newExam.save({ session: session });
+            await newNotification.save({ session: session });
+    
+            await session.commitTransaction();    
+            res.status(201).json(newExam);
+        } catch {
+            await session.abortTransaction();
+            res.sendStatus(400);
+        } finally {
+            session.endSession();
+        }
+    } else {
+        try {
+            await newExam.save();
+            res.status(201).json(newExam);
+        } catch (err) {
+            res.sendStatus(400);
+        }
+    }    
 });
 
 router.patch('/:id', getExam, async (req, res) => {
@@ -85,6 +94,78 @@ async function getExam(req: Request, res: Response, next: NextFunction) {
 
     res.exam = exam;
     next();
+}
+
+
+function generateNotificationMessage(exam: IExam) {
+    const catsRatesLimits: {[key: string]: ({min?: number, max?: number} | undefined)} = {
+        'sódio': {  // mEq/L or mmol/L
+            min: 145.8,
+            max: 158.7,
+        },
+        'cloreto': {    // mEq/L or mmol/L
+            min: 107.5,
+            max: 129.6,
+        },
+        'potássio': {   // mEq/L or mmol/L
+            min: 3.8,
+            max: 5.3,
+        },
+        'cálcio total': {   // mg/dL
+            min: 7.9,
+            max: 10.9,
+        },
+        'cálcio ionizado': {    // mg/dL
+            min: 4.5,
+            max: 5.5,
+        },
+        'magnésio': {   // mg/dL
+            min: 1.9,
+            max: 2.8,
+        },
+        'fósforo': {    // mg/dL
+            min: 4,
+            max: 7.3,
+        },
+        'pressão arterial': {
+            min: 120,
+            max: 160,
+        },
+        'ureia': {
+            min: undefined,
+            max: 60,
+        },
+        'densidade urinária': {
+            min: 1.035,
+            max: undefined,
+        },
+        // 'albumina_globulinas_ratio': { // Se < 0.5 ou maior que 1.7
+        //     min: 0.5,
+        //     max: 1.7,
+        // },
+        // 'creatinina': { // Se aumentar em relação ao valor anterior ou se passar de 1.6
+        //     min: undefined,
+        //     max: 1.6,
+        // },
+        // 'rpcu': { // Se aumentar em relação ao valor anterior ou passar de 0.4
+        //     min: undefined,
+        //     max: 0.4,
+        // },
+    }
+
+    const examLimits = catsRatesLimits[exam.type];
+
+    if(!examLimits) {
+        return undefined;
+    }
+
+    if(examLimits.min && exam.result < examLimits.min) {
+        return `${exam.type} abaixo de ${examLimits.min}`;
+    }
+    
+    if(examLimits.max && exam.result > examLimits.max) {
+        return `${exam.type} acima de ${examLimits.max}`;
+    }
 }
 
 

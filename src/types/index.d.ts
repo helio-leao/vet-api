@@ -1,10 +1,10 @@
 declare namespace Express {
     export interface Request {
-       user?: any
+        user?: any
     }
     export interface Response {
-       user?: any
-       exam?: any
-       patient?: any
+        user?: any
+        exam?: any
+        patient?: any
     }
- }
+}

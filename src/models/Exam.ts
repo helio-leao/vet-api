@@ -1,7 +1,15 @@
-import mongoose from 'mongoose';
+import mongoose, {Types} from 'mongoose';
 
 
-const examSchema = new mongoose.Schema({
+export interface IExam {
+    type: string,
+    unit?: string,
+    date: Date,
+    result: number,
+    patient: Types.ObjectId,
+}
+
+const examSchema = new mongoose.Schema<IExam>({
     type: {
         type: String,
         required: true,
@@ -24,4 +32,4 @@ const examSchema = new mongoose.Schema({
 });
 
 
-export default mongoose.model('Exam', examSchema);
+export default mongoose.model<IExam>('Exam', examSchema);
