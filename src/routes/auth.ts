@@ -11,8 +11,12 @@ router.post('/login', async (req, res) => {
         const user = await User.findOne({ email: req.body.email })
             .select('+password').exec();
 
+        if(!user) {
+            return res.sendStatus(404);
+        }
+
         if(!await bcrypt.compare(req.body.password, user.password)) {
-            res.sendStatus(401);
+            return res.sendStatus(401);
         }
 
         const authData = { id: user.id, email: user.email };
