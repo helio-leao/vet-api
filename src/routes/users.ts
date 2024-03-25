@@ -8,8 +8,8 @@ router.get('/', async (_req, res) => {
     try {
         const users = await User.find();
         res.json(users);
-    } catch (error) {
-        res.status(500).json({ message: error.message });
+    } catch {
+        res.sendStatus(500);
     }
 });
 
@@ -26,8 +26,8 @@ router.post('/', async (req, res) => {
     try {
         await newUser.save();
         res.status(201).json(newUser);
-    } catch (error) {
-        res.status(400).json({ message: error.message });
+    } catch {
+        res.sendStatus(400);
     }
 });
 
@@ -42,8 +42,8 @@ router.patch('/:id', getUser, async (req, res) => {
     try {
         const updatedUser = await res.user.save();
         res.json(updatedUser);
-    } catch (error) {
-        res.status(400).json({ message: error.message });
+    } catch {
+        res.sendStatus(400);
     }
 });
 
@@ -51,8 +51,8 @@ router.delete('/:id', getUser, async (_req, res) => {
     try {
         await res.user.deleteOne();
         res.json({ message: 'Deleted user' });
-    } catch (error) {
-        res.status(500).json({ message: error.message });
+    } catch {
+        res.sendStatus(500);
     }
 });
 
@@ -63,10 +63,10 @@ async function getUser(req: Request, res: Response, next: NextFunction) {
     try {
         user = await User.findById(req.params.id);
         if(!user) {
-            return res.status(404).json({ message: 'Cannot find user' });
+            return res.sendStatus(404);
         }
-    } catch (error) {
-        res.status(500).json({ message: error.message });
+    } catch {
+        res.sendStatus(500);
     }
 
     res.user = user;

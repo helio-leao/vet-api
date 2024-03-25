@@ -64,8 +64,8 @@ router.get("/", async (_req, res) => {
   try {
     const users = await User_default.find();
     res.json(users);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
+  } catch {
+    res.sendStatus(500);
   }
 });
 router.get("/:id", getUser, (_req, res) => {
@@ -79,8 +79,8 @@ router.post("/", async (req, res) => {
   try {
     await newUser.save();
     res.status(201).json(newUser);
-  } catch (error) {
-    res.status(400).json({ message: error.message });
+  } catch {
+    res.sendStatus(400);
   }
 });
 router.patch("/:id", getUser, async (req, res) => {
@@ -93,16 +93,16 @@ router.patch("/:id", getUser, async (req, res) => {
   try {
     const updatedUser = await res.user.save();
     res.json(updatedUser);
-  } catch (error) {
-    res.status(400).json({ message: error.message });
+  } catch {
+    res.sendStatus(400);
   }
 });
 router.delete("/:id", getUser, async (_req, res) => {
   try {
     await res.user.deleteOne();
     res.json({ message: "Deleted user" });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
+  } catch {
+    res.sendStatus(500);
   }
 });
 async function getUser(req, res, next) {
@@ -110,10 +110,10 @@ async function getUser(req, res, next) {
   try {
     user = await User_default.findById(req.params.id);
     if (!user) {
-      return res.status(404).json({ message: "Cannot find user" });
+      return res.sendStatus(404);
     }
-  } catch (error) {
-    res.status(500).json({ message: error.message });
+  } catch {
+    res.sendStatus(500);
   }
   res.user = user;
   next();
@@ -202,16 +202,16 @@ router2.get("/:id/exams", async (req, res) => {
   try {
     const exams = await Exam_default.find({ patient: req.params.id }).sort({ date: 1 });
     res.json(exams);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
+  } catch {
+    res.sendStatus(500);
   }
 });
 router2.get("/", authenticateToken_default, async (req, res) => {
   try {
     const patients = await Patient_default.find({ user: req.user.id });
     res.json(patients);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
+  } catch {
+    res.sendStatus(500);
   }
 });
 router2.get("/:id", authenticateToken_default, getPatient, (_req, res) => {
@@ -231,8 +231,8 @@ router2.post("/", authenticateToken_default, async (req, res) => {
   try {
     await newPatient.save();
     res.status(201).json(newPatient);
-  } catch (error) {
-    res.status(400).json({ message: error.message });
+  } catch {
+    res.sendStatus(400);
   }
 });
 router2.patch("/:id", authenticateToken_default, getPatient, async (req, res) => {
@@ -260,16 +260,16 @@ router2.patch("/:id", authenticateToken_default, getPatient, async (req, res) =>
   try {
     const updatedPatient = await res.patient.save();
     res.json(updatedPatient);
-  } catch (error) {
-    res.status(400).json({ message: error.message });
+  } catch {
+    res.sendStatus(400);
   }
 });
 router2.delete("/:id", authenticateToken_default, getPatient, async (_req, res) => {
   try {
     await res.patient.deleteOne();
     res.json({ message: "Deleted patient" });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
+  } catch {
+    res.sendStatus(500);
   }
 });
 async function getPatient(req, res, next) {
@@ -277,10 +277,10 @@ async function getPatient(req, res, next) {
   try {
     patient = await Patient_default.findOne({ _id: req.params.id, user: req.user.id });
     if (!patient) {
-      return res.status(404).json({ message: "Cannot find patient" });
+      return res.sendStatus(404);
     }
-  } catch (error) {
-    res.status(500).json({ message: error.message });
+  } catch {
+    res.sendStatus(500);
   }
   res.patient = patient;
   next();
@@ -329,9 +329,9 @@ router3.post("/", async (req, res) => {
     await newNotification.save({ session });
     await session.commitTransaction();
     res.status(201).json(newExam);
-  } catch (error) {
+  } catch {
     await session.abortTransaction();
-    res.status(400).json({ message: error.message });
+    res.sendStatus(400);
   } finally {
     session.endSession();
   }
@@ -352,16 +352,16 @@ router3.patch("/:id", getExam, async (req, res) => {
   try {
     const updatedExam = await res.exam.save();
     res.json(updatedExam);
-  } catch (error) {
-    res.status(400).json({ message: error.message });
+  } catch {
+    res.sendStatus(400);
   }
 });
 router3.delete("/:id", getExam, async (_req, res) => {
   try {
     await res.exam.deleteOne();
     res.json({ message: "Deleted exam" });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
+  } catch {
+    res.sendStatus(500);
   }
 });
 async function getExam(req, res, next) {
@@ -369,10 +369,10 @@ async function getExam(req, res, next) {
   try {
     exam = await Exam_default.findById(req.params.id);
     if (!exam) {
-      return res.status(404).json({ message: "Cannot find exam" });
+      return res.sendStatus(404);
     }
-  } catch (error) {
-    res.status(500).json({ message: error.message });
+  } catch {
+    res.sendStatus(500);
   }
   res.exam = exam;
   next();
@@ -424,19 +424,19 @@ router4.get("/", authenticateToken_default, async (req, res) => {
       }
     ]);
     res.json(notifications);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
+  } catch {
+    res.sendStatus(500);
   }
 });
 router4.delete("/delete-many", authenticateToken_default, async (req, res) => {
   try {
     const result = await Notification_default.deleteMany({ _id: { $in: req.body.ids } });
     if (result.deletedCount === 0) {
-      return res.status(404).json({ error: "No records found with the provided IDs" });
+      return res.sendStatus(404);
     }
     res.json({ message: `${result.deletedCount} records deleted` });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
+  } catch {
+    res.sendStatus(500);
   }
 });
 router4.put("/update-many-notification-status", authenticateToken_default, async (req, res) => {
@@ -446,11 +446,11 @@ router4.put("/update-many-notification-status", authenticateToken_default, async
       { $set: { status: "READ" } }
     );
     if (result.matchedCount === 0) {
-      return res.status(404).json({ error: "No records found with the provided IDs" });
+      return res.sendStatus(404);
     }
     res.json({ message: `${result.modifiedCount} records updated` });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
+  } catch {
+    res.sendStatus(500);
   }
 });
 var notifications_default = router4;
@@ -472,8 +472,8 @@ router5.post("/login", async (req, res) => {
     const authData = { id: user.id, email: user.email };
     const accessToken = import_jsonwebtoken2.default.sign(authData, process.env.ACCESS_TOKEN_SECRET);
     res.json({ accessToken });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
+  } catch {
+    res.sendStatus(500);
   }
 });
 router5.delete("/logout", async (req, res) => {

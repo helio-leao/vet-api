@@ -99,9 +99,9 @@ router.post("/", async (req, res) => {
     await newNotification.save({ session });
     await session.commitTransaction();
     res.status(201).json(newExam);
-  } catch (error) {
+  } catch {
     await session.abortTransaction();
-    res.status(400).json({ message: error.message });
+    res.sendStatus(400);
   } finally {
     session.endSession();
   }
@@ -122,16 +122,16 @@ router.patch("/:id", getExam, async (req, res) => {
   try {
     const updatedExam = await res.exam.save();
     res.json(updatedExam);
-  } catch (error) {
-    res.status(400).json({ message: error.message });
+  } catch {
+    res.sendStatus(400);
   }
 });
 router.delete("/:id", getExam, async (_req, res) => {
   try {
     await res.exam.deleteOne();
     res.json({ message: "Deleted exam" });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
+  } catch {
+    res.sendStatus(500);
   }
 });
 async function getExam(req, res, next) {
@@ -139,10 +139,10 @@ async function getExam(req, res, next) {
   try {
     exam = await Exam_default.findById(req.params.id);
     if (!exam) {
-      return res.status(404).json({ message: "Cannot find exam" });
+      return res.sendStatus(404);
     }
-  } catch (error) {
-    res.status(500).json({ message: error.message });
+  } catch {
+    res.sendStatus(500);
   }
   res.exam = exam;
   next();

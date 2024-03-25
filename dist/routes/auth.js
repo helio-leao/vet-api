@@ -80,8 +80,8 @@ router.post("/login", async (req, res) => {
     const authData = { id: user.id, email: user.email };
     const accessToken = import_jsonwebtoken.default.sign(authData, process.env.ACCESS_TOKEN_SECRET);
     res.json({ accessToken });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
+  } catch {
+    res.sendStatus(500);
   }
 });
 router.delete("/logout", async (req, res) => {

@@ -113,19 +113,19 @@ router.get("/", authenticateToken_default, async (req, res) => {
       }
     ]);
     res.json(notifications);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
+  } catch {
+    res.sendStatus(500);
   }
 });
 router.delete("/delete-many", authenticateToken_default, async (req, res) => {
   try {
     const result = await Notification_default.deleteMany({ _id: { $in: req.body.ids } });
     if (result.deletedCount === 0) {
-      return res.status(404).json({ error: "No records found with the provided IDs" });
+      return res.sendStatus(404);
     }
     res.json({ message: `${result.deletedCount} records deleted` });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
+  } catch {
+    res.sendStatus(500);
   }
 });
 router.put("/update-many-notification-status", authenticateToken_default, async (req, res) => {
@@ -135,11 +135,11 @@ router.put("/update-many-notification-status", authenticateToken_default, async 
       { $set: { status: "READ" } }
     );
     if (result.matchedCount === 0) {
-      return res.status(404).json({ error: "No records found with the provided IDs" });
+      return res.sendStatus(404);
     }
     res.json({ message: `${result.modifiedCount} records updated` });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
+  } catch {
+    res.sendStatus(500);
   }
 });
 var notifications_default = router;

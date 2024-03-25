@@ -10,8 +10,8 @@ router.get('/:id/exams', async (req, res) => {
     try {
         const exams = await Exam.find({ patient: req.params.id }).sort({date: 1});
         res.json(exams);
-    } catch (error) {
-        res.status(500).json({ message: error.message });
+    } catch {
+        res.sendStatus(500);
     }
 });
 
@@ -19,8 +19,8 @@ router.get('/', authenticateToken, async (req, res) => {
     try {
         const patients = await Patient.find({ user: req.user.id });
         res.json(patients);
-    } catch (error) {
-        res.status(500).json({ message: error.message });
+    } catch {
+        res.sendStatus(500);
     }
 });
 
@@ -43,8 +43,8 @@ router.post('/', authenticateToken, async (req, res) => {
     try {
         await newPatient.save();
         res.status(201).json(newPatient);
-    } catch (error) {
-        res.status(400).json({ message: error.message });
+    } catch {
+        res.sendStatus(400);
     }
 });
 
@@ -74,8 +74,8 @@ router.patch('/:id', authenticateToken, getPatient, async (req, res) => {
     try {
         const updatedPatient = await res.patient.save();
         res.json(updatedPatient);
-    } catch (error) {
-        res.status(400).json({ message: error.message });
+    } catch {
+        res.sendStatus(400);
     }
 });
 
@@ -83,8 +83,8 @@ router.delete('/:id', authenticateToken, getPatient, async (_req, res) => {
     try {
         await res.patient.deleteOne();
         res.json({ message: 'Deleted patient' });
-    } catch (error) {
-        res.status(500).json({ message: error.message });
+    } catch {
+        res.sendStatus(500);
     }
 });
 
@@ -95,10 +95,10 @@ async function getPatient(req: Request, res: Response, next: NextFunction) {
     try {
         patient = await Patient.findOne({ _id: req.params.id, user: req.user.id });
         if(!patient) {
-            return res.status(404).json({ message: 'Cannot find patient' });
+            return res.sendStatus(404);
         }
-    } catch (error) {
-        res.status(500).json({ message: error.message });
+    } catch {
+        res.sendStatus(500);
     }
 
     res.patient = patient;
