@@ -99,15 +99,15 @@ async function getExam(req: Request, res: Response, next: NextFunction) {
 
 function generateNotificationMessage(exam: IExam) {
     const catsRatesLimits: {[key: string]: ({min?: number, max?: number} | undefined)} = {
-        'sódio': {  // mEq/L or mmol/L
+        'sódio': {  // mEq/L
             min: 145.8,
             max: 158.7,
         },
-        'cloreto': {    // mEq/L or mmol/L
+        'cloreto': {    // mEq/L
             min: 107.5,
             max: 129.6,
         },
-        'potássio': {   // mEq/L or mmol/L
+        'potássio': {   // mEq/L
             min: 3.8,
             max: 5.3,
         },
@@ -115,39 +115,39 @@ function generateNotificationMessage(exam: IExam) {
             min: 7.9,
             max: 10.9,
         },
-        'cálcio ionizado': {    // mg/dL
-            min: 4.5,
-            max: 5.5,
-        },
-        'magnésio': {   // mg/dL
-            min: 1.9,
-            max: 2.8,
+        'cálcio ionizado': {    // mmol/L
+            min: 1.1,
+            max: 1.4,
         },
         'fósforo': {    // mg/dL
             min: 4,
             max: 7.3,
         },
-        'pressão arterial': {
+        'magnésio': {   // mg/dL
+            min: 1.9,
+            max: 2.8,
+        },
+        'pressão arterial': {   // mmHg
             min: 120,
             max: 160,
         },
-        'ureia': {
+        'ureia': {  // mg/dL
             min: undefined,
             max: 60,
         },
-        'densidade urinária': {
+        'densidade urinária': { // no unit
             min: 1.035,
             max: undefined,
         },
-        // 'albumina_globulinas_ratio': { // Se < 0.5 ou maior que 1.7
+        // 'albumina_globulinas_ratio': { // Se < 0.5 ou maior que 1.7 (g/dL)
         //     min: 0.5,
         //     max: 1.7,
         // },
-        // 'creatinina': { // Se aumentar em relação ao valor anterior ou se passar de 1.6
+        // 'creatinina': { // Se aumentar em relação ao valor anterior ou se passar de 1.6 (mg/dL)
         //     min: undefined,
         //     max: 1.6,
         // },
-        // 'rpcu': { // Se aumentar em relação ao valor anterior ou passar de 0.4
+        // 'rpcu': { // Se aumentar em relação ao valor anterior ou passar de 0.4 (no unit)
         //     min: undefined,
         //     max: 0.4,
         // },
