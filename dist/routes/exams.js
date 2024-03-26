@@ -160,17 +160,17 @@ async function getExam(req, res, next) {
 function generateNotificationMessage(exam) {
   const catsRatesLimits = {
     "s\xF3dio": {
-      // mEq/L or mmol/L
+      // mEq/L
       min: 145.8,
       max: 158.7
     },
     "cloreto": {
-      // mEq/L or mmol/L
+      // mEq/L
       min: 107.5,
       max: 129.6
     },
     "pot\xE1ssio": {
-      // mEq/L or mmol/L
+      // mEq/L
       min: 3.8,
       max: 5.3
     },
@@ -180,41 +180,44 @@ function generateNotificationMessage(exam) {
       max: 10.9
     },
     "c\xE1lcio ionizado": {
-      // mg/dL
-      min: 4.5,
-      max: 5.5
-    },
-    "magn\xE9sio": {
-      // mg/dL
-      min: 1.9,
-      max: 2.8
+      // mmol/L
+      min: 1.1,
+      max: 1.4
     },
     "f\xF3sforo": {
       // mg/dL
       min: 4,
       max: 7.3
     },
+    "magn\xE9sio": {
+      // mg/dL
+      min: 1.9,
+      max: 2.8
+    },
     "press\xE3o arterial": {
+      // mmHg
       min: 120,
       max: 160
     },
     "ureia": {
+      // mg/dL
       min: void 0,
       max: 60
     },
     "densidade urin\xE1ria": {
+      // no unit
       min: 1.035,
       max: void 0
     }
-    // 'albumina_globulinas_ratio': { // Se < 0.5 ou maior que 1.7
+    // 'albumina_globulinas_ratio': { // Se < 0.5 ou maior que 1.7 (g/dL)
     //     min: 0.5,
     //     max: 1.7,
     // },
-    // 'creatinina': { // Se aumentar em relação ao valor anterior ou se passar de 1.6
+    // 'creatinina': { // Se aumentar em relação ao valor anterior ou se passar de 1.6 (mg/dL)
     //     min: undefined,
     //     max: 1.6,
     // },
-    // 'rpcu': { // Se aumentar em relação ao valor anterior ou passar de 0.4
+    // 'rpcu': { // Se aumentar em relação ao valor anterior ou passar de 0.4 (no unit)
     //     min: undefined,
     //     max: 0.4,
     // },
