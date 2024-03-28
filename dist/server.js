@@ -387,78 +387,25 @@ async function getExam(req, res, next) {
   res.exam = exam;
   next();
 }
-function generateNotificationMessage(exam) {
+function getExamLimits(examType) {
   const catsRatesLimits = {
-    "s\xF3dio": {
-      unit: "mEq/L",
-      min: 145.8,
-      max: 158.7
-    },
-    "cloreto": {
-      unit: "mEq/L",
-      min: 107.5,
-      max: 129.6
-    },
-    "pot\xE1ssio": {
-      unit: "mEq/L",
-      min: 3.8,
-      max: 5.3
-    },
-    "c\xE1lcio total": {
-      unit: "mg/dL",
-      min: 7.9,
-      max: 10.9
-    },
-    "c\xE1lcio ionizado": {
-      unit: "mmol/L",
-      min: 1.1,
-      max: 1.4
-    },
-    "f\xF3sforo": {
-      unit: "mg/dL",
-      min: 4,
-      max: 7.3
-    },
-    "magn\xE9sio": {
-      unit: "mg/dL",
-      min: 1.9,
-      max: 2.8
-    },
-    "press\xE3o arterial": {
-      unit: "mmHg",
-      min: 120,
-      max: 160
-    },
-    "ureia": {
-      unit: "mg/dL",
-      min: void 0,
-      max: 60
-    },
-    "densidade urin\xE1ria": {
-      unit: void 0,
-      min: 1.035,
-      max: void 0
-    }
-    // 'albumina_globulinas_ratio': { // Se < 0.5 ou maior que 1.7
-    //     unit: 'g/dL',
-    //     min: 0.5,
-    //     max: 1.7,
-    // },
-    // 'creatinina': { // Se aumentar em relação ao valor anterior ou se passar de 1.6
-    //     unit: 'mg/dL',
-    //     min: undefined,
-    //     max: 1.6,
-    // },
-    // 'rpcu': { // Se aumentar em relação ao valor anterior ou passar de 0.4
-    //     unit: undefined,
-    //     min: undefined,
-    //     max: 0.4,
-    // },
+    "s\xF3dio": { unit: "mEq/L", min: 145.8, max: 158.7 },
+    "cloreto": { unit: "mEq/L", min: 107.5, max: 129.6 },
+    "pot\xE1ssio": { unit: "mEq/L", min: 3.8, max: 5.3 },
+    "c\xE1lcio total": { unit: "mg/dL", min: 7.9, max: 10.9 },
+    "c\xE1lcio ionizado": { unit: "mmol/L", min: 1.1, max: 1.4 },
+    "f\xF3sforo": { unit: "mg/dL", min: 4, max: 7.3 },
+    "magn\xE9sio": { unit: "mg/dL", min: 1.9, max: 2.8 },
+    "press\xE3o arterial": { unit: "mmHg", min: 120, max: 160 },
+    "ureia": { unit: "mg/dL", min: void 0, max: 60 },
+    "densidade urin\xE1ria": { unit: void 0, min: 1.035, max: void 0 }
   };
-  const examLimits = catsRatesLimits[exam.type];
-  if (!examLimits) {
+  return catsRatesLimits[examType];
+}
+function generateNotificationMessage(exam) {
+  const examLimits = getExamLimits(exam.type);
+  if (!examLimits)
     return void 0;
-  }
   let message = `${exam.type}`;
   switch (exam.type) {
     case "albumina":
