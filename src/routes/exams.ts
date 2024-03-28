@@ -98,56 +98,69 @@ async function getExam(req: Request, res: Response, next: NextFunction) {
 
 
 function generateNotificationMessage(exam: IExam) {
-    const catsRatesLimits: {[key: string]: ({min?: number, max?: number} | undefined)} = {
-        'sódio': {  // mEq/L
+    const catsRatesLimits: {[key: string]: ({unit?: string, min?: number, max?: number} | undefined)} = {
+        'sódio': {
+            unit: 'mEq/L',
             min: 145.8,
             max: 158.7,
         },
-        'cloreto': {    // mEq/L
+        'cloreto': {
+            unit: 'mEq/L',
             min: 107.5,
             max: 129.6,
         },
-        'potássio': {   // mEq/L
+        'potássio': {
+            unit: 'mEq/L',
             min: 3.8,
             max: 5.3,
         },
-        'cálcio total': {   // mg/dL
+        'cálcio total': {
+            unit: 'mg/dL',
             min: 7.9,
             max: 10.9,
         },
-        'cálcio ionizado': {    // mmol/L
+        'cálcio ionizado': {
+            unit: 'mmol/L',
             min: 1.1,
             max: 1.4,
         },
-        'fósforo': {    // mg/dL
+        'fósforo': {
+            unit: 'mg/dL',
             min: 4,
             max: 7.3,
         },
-        'magnésio': {   // mg/dL
+        'magnésio': {
+            unit: 'mg/dL',
             min: 1.9,
             max: 2.8,
         },
-        'pressão arterial': {   // mmHg
+        'pressão arterial': {
+            unit: 'mmHg',
             min: 120,
             max: 160,
         },
-        'ureia': {  // mg/dL
+        'ureia': {
+            unit: 'mg/dL',
             min: undefined,
             max: 60,
         },
-        'densidade urinária': { // no unit
+        'densidade urinária': {
+            unit: undefined,
             min: 1.035,
             max: undefined,
         },
-        // 'albumina_globulinas_ratio': { // Se < 0.5 ou maior que 1.7 (g/dL)
+        // 'albumina_globulinas_ratio': { // Se < 0.5 ou maior que 1.7
+        //     unit: 'g/dL',
         //     min: 0.5,
         //     max: 1.7,
         // },
-        // 'creatinina': { // Se aumentar em relação ao valor anterior ou se passar de 1.6 (mg/dL)
+        // 'creatinina': { // Se aumentar em relação ao valor anterior ou se passar de 1.6
+        //     unit: 'mg/dL',
         //     min: undefined,
         //     max: 1.6,
         // },
-        // 'rpcu': { // Se aumentar em relação ao valor anterior ou passar de 0.4 (no unit)
+        // 'rpcu': { // Se aumentar em relação ao valor anterior ou passar de 0.4
+        //     unit: undefined,
         //     min: undefined,
         //     max: 0.4,
         // },
@@ -155,16 +168,34 @@ function generateNotificationMessage(exam: IExam) {
 
     const examLimits = catsRatesLimits[exam.type];
 
+    // exam type received not on 
     if(!examLimits) {
         return undefined;
     }
 
-    if(examLimits.min && exam.result < examLimits.min) {
-        return `${exam.type} abaixo de ${examLimits.min}`;
+    // creates notification message to be returned if conditions met
+    let message = `${exam.type}`;
+
+    switch(exam.type) {
+        case 'albumina':
+        case 'creatinina':
+            message += ` sérica`;
+            break;
+        case 'fósforo':
+        case 'sódio':
+        case 'potássio':
+        case 'cloreto':
+        case 'magnésio':
+            message += ` sérico`;
+            break;
     }
-    
-    if(examLimits.max && exam.result > examLimits.max) {
-        return `${exam.type} acima de ${examLimits.max}`;
+
+    if(examLimits.min && exam.result < examLimits.min) {
+        return `${message} < ${examLimits.min}${examLimits.unit ? ` ${examLimits.unit}` : ``}`;
+    } else if(examLimits.max && exam.result > examLimits.max) {
+        return `${message} > ${examLimits.max}${examLimits.unit ? ` ${examLimits.unit}` : ``}`;
+    } else {
+        return undefined;
     }
 }
 
