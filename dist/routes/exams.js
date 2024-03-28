@@ -160,64 +160,67 @@ async function getExam(req, res, next) {
 function generateNotificationMessage(exam) {
   const catsRatesLimits = {
     "s\xF3dio": {
-      // mEq/L
+      unit: "mEq/L",
       min: 145.8,
       max: 158.7
     },
     "cloreto": {
-      // mEq/L
+      unit: "mEq/L",
       min: 107.5,
       max: 129.6
     },
     "pot\xE1ssio": {
-      // mEq/L
+      unit: "mEq/L",
       min: 3.8,
       max: 5.3
     },
     "c\xE1lcio total": {
-      // mg/dL
+      unit: "mg/dL",
       min: 7.9,
       max: 10.9
     },
     "c\xE1lcio ionizado": {
-      // mmol/L
+      unit: "mmol/L",
       min: 1.1,
       max: 1.4
     },
     "f\xF3sforo": {
-      // mg/dL
+      unit: "mg/dL",
       min: 4,
       max: 7.3
     },
     "magn\xE9sio": {
-      // mg/dL
+      unit: "mg/dL",
       min: 1.9,
       max: 2.8
     },
     "press\xE3o arterial": {
-      // mmHg
+      unit: "mmHg",
       min: 120,
       max: 160
     },
     "ureia": {
-      // mg/dL
+      unit: "mg/dL",
       min: void 0,
       max: 60
     },
     "densidade urin\xE1ria": {
-      // no unit
+      unit: void 0,
       min: 1.035,
       max: void 0
     }
-    // 'albumina_globulinas_ratio': { // Se < 0.5 ou maior que 1.7 (g/dL)
+    // 'albumina_globulinas_ratio': { // Se < 0.5 ou maior que 1.7
+    //     unit: 'g/dL',
     //     min: 0.5,
     //     max: 1.7,
     // },
-    // 'creatinina': { // Se aumentar em relação ao valor anterior ou se passar de 1.6 (mg/dL)
+    // 'creatinina': { // Se aumentar em relação ao valor anterior ou se passar de 1.6
+    //     unit: 'mg/dL',
     //     min: undefined,
     //     max: 1.6,
     // },
-    // 'rpcu': { // Se aumentar em relação ao valor anterior ou passar de 0.4 (no unit)
+    // 'rpcu': { // Se aumentar em relação ao valor anterior ou passar de 0.4
+    //     unit: undefined,
     //     min: undefined,
     //     max: 0.4,
     // },
@@ -226,11 +229,26 @@ function generateNotificationMessage(exam) {
   if (!examLimits) {
     return void 0;
   }
-  if (examLimits.min && exam.result < examLimits.min) {
-    return `${exam.type} abaixo de ${examLimits.min}`;
+  let message = `${exam.type}`;
+  switch (exam.type) {
+    case "albumina":
+    case "creatinina":
+      message += ` s\xE9rica`;
+      break;
+    case "f\xF3sforo":
+    case "s\xF3dio":
+    case "pot\xE1ssio":
+    case "cloreto":
+    case "magn\xE9sio":
+      message += ` s\xE9rico`;
+      break;
   }
-  if (examLimits.max && exam.result > examLimits.max) {
-    return `${exam.type} acima de ${examLimits.max}`;
+  if (examLimits.min && exam.result < examLimits.min) {
+    return `${message} < ${examLimits.min}${examLimits.unit ? ` ${examLimits.unit}` : ``}`;
+  } else if (examLimits.max && exam.result > examLimits.max) {
+    return `${message} > ${examLimits.max}${examLimits.unit ? ` ${examLimits.unit}` : ``}`;
+  } else {
+    return void 0;
   }
 }
 var exams_default = router;
