@@ -62,6 +62,8 @@ var patientSchema = new import_mongoose.default.Schema({
   },
   species: {
     type: String,
+    enum: ["canina", "felina"],
+    required: true,
     lowercase: true
   },
   breed: {

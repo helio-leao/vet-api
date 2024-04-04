@@ -2,50 +2,60 @@ import express, { Request, Response, NextFunction } from 'express';
 import mongoose from 'mongoose';
 import Exam, { IExam } from '../models/Exam';
 import Notification from '../models/Notification';
+import Patient from '../models/Patient';
 
 const router = express.Router();
 
 
 router.post('/', async (req, res) => {
-    const newExam = new Exam({
-        type: req.body.type,
-        unit: req.body.unit,
-        date: req.body.date,
-        result: req.body.result,
-        patient: req.body.patient,
-    });
-    
-    const notificationMessage = generateNotificationMessage(newExam);
-    
-    if(notificationMessage) {
-        const newNotification = new Notification({
-            message: notificationMessage,
-            exam: newExam.id,
+    try {
+        // fetch patient related to new exam
+        const patient = await Patient.findById(req.body.patient);
+        
+        if(!patient) {
+            return res.sendStatus(404);
+        }
+
+        // creates new exam
+        const newExam = new Exam({
+            type: req.body.type,
+            unit: req.body.unit,
+            date: req.body.date,
+            result: req.body.result,
+            patient: req.body.patient,
         });
 
-        const session = await mongoose.startSession();
-        session.startTransaction();
+
+        const notificationMessage = generateNotificationMessage(newExam, patient.species);
+
+        if (notificationMessage) {  // adds exam with notification
+            const newNotification = new Notification({
+                message: notificationMessage,
+                exam: newExam.id,
+            });
+
+            const session = await mongoose.startSession();
+            session.startTransaction();
+            
+            try {
+                await newExam.save({ session: session });
+                await newNotification.save({ session: session });
         
-        try {
-            await newExam.save({ session: session });
-            await newNotification.save({ session: session });
-    
-            await session.commitTransaction();    
-            res.status(201).json(newExam);
-        } catch {
-            await session.abortTransaction();
-            res.sendStatus(400);
-        } finally {
-            session.endSession();
-        }
-    } else {
-        try {
+                await session.commitTransaction();    
+                res.status(201).json(newExam);
+            } catch {
+                await session.abortTransaction();
+                res.sendStatus(400);
+            } finally {
+                session.endSession();
+            }
+        } else {    // adds exam only
             await newExam.save();
             res.status(201).json(newExam);
-        } catch (err) {
-            res.sendStatus(400);
         }
-    }    
+    } catch (error) {
+        res.sendStatus(500);
+    }
 });
 
 router.patch('/:id', getExam, async (req, res) => {
@@ -97,8 +107,8 @@ async function getExam(req: Request, res: Response, next: NextFunction) {
 }
 
 
-function getExamLimits(examType: string) {
-    const catsRatesLimits: {[key: string]: ({unit?: string, min?: number, max?: number} | undefined)} = {
+function getExamLimits(examType: string, species: ('felina' | 'canina')) {
+    const catLimits: {[key: string]: ({unit?: string, min?: number, max?: number} | undefined)} = {
         'sódio': { unit: 'mEq/L', min: 145.8, max: 158.7 },
         'cloreto': { unit: 'mEq/L', min: 107.5, max: 129.6 },
         'potássio': { unit: 'mEq/L', min: 3.8, max: 5.3 },
@@ -106,16 +116,34 @@ function getExamLimits(examType: string) {
         'cálcio ionizado': { unit: 'mmol/L', min: 1.1, max: 1.4 },
         'fósforo': { unit: 'mg/dL', min: 4, max: 7.3 },
         'magnésio': { unit: 'mg/dL', min: 1.9, max: 2.8 },
-        'pressão arterial': { unit: 'mmHg', min: 120, max: 160 },
+        'pressão arterial': { unit: 'mmHg', min: 120, max: 140 },
         'ureia': { unit: 'mg/dL', min: undefined, max: 60 },
         'densidade urinária': { unit: undefined, min: 1.035, max: undefined },
+        'creatinina': { unit: 'mg/dL', min: undefined, max: 1.6 },
+    }
+    const dogLimits: {[key: string]: ({unit?: string, min?: number, max?: number} | undefined)} = {
+        'sódio': { unit: 'mEq/L', min: 140.3, max: 159.9 },
+        'cloreto': { unit: 'mEq/L', min: 102.1, max: 117.4 },
+        'potássio': { unit: 'mEq/L', min: 3.8, max: 5.6 },
+        'cálcio total': { unit: 'mg/dL', min: 8.7, max: 11.8 },
+        'cálcio ionizado': { unit: 'mmol/L', min: 1.18, max: 1.4 },
+        'fósforo': { unit: 'mg/dL', min: 2.9, max: 6.2 },
+        'magnésio': { unit: 'mg/dL', min: 1.7, max: 2.7 },
+        'pressão arterial': { unit: 'mmHg', min: 120, max: 140 },
+        'ureia': { unit: 'mg/dL', min: undefined, max: 60 },
+        'densidade urinária': { unit: undefined, min: 1.015, max: undefined },
+        'creatinina': { unit: 'mg/dL', min: undefined, max: 1.4 },
     }
 
-    return catsRatesLimits[examType];
+    if(species === 'felina') {
+        return catLimits[examType];
+    } else if(species === 'canina') {
+        return dogLimits[examType];
+    }
 }
 
-function generateNotificationMessage(exam: IExam) {
-    const examLimits = getExamLimits(exam.type);
+function generateNotificationMessage(exam: IExam, animalSpecies: ('felina' | 'canina')) {
+    const examLimits = getExamLimits(exam.type, animalSpecies);
 
     // exam type not on 'getExamLimits' map
     if(!examLimits) return undefined;

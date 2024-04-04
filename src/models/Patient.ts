@@ -9,6 +9,8 @@ const patientSchema = new mongoose.Schema({
     },
     species: {
         type: String,
+        enum: ['canina', 'felina'],
+        required: true,
         lowercase: true,
     },
     breed: {

@@ -34,7 +34,7 @@ __export(exams_exports, {
 });
 module.exports = __toCommonJS(exams_exports);
 var import_express = __toESM(require("express"));
-var import_mongoose3 = __toESM(require("mongoose"));
+var import_mongoose4 = __toESM(require("mongoose"));
 
 // src/models/Exam.ts
 var import_mongoose = __toESM(require("mongoose"));
@@ -78,42 +78,79 @@ var notificationSchema = new import_mongoose2.default.Schema({
 });
 var Notification_default = import_mongoose2.default.model("Notification", notificationSchema);
 
+// src/models/Patient.ts
+var import_mongoose3 = __toESM(require("mongoose"));
+var patientSchema = new import_mongoose3.default.Schema({
+  name: {
+    type: String,
+    required: true,
+    lowercase: true
+  },
+  species: {
+    type: String,
+    enum: ["canina", "felina"],
+    required: true,
+    lowercase: true
+  },
+  breed: {
+    type: String,
+    lowercase: true
+  },
+  tutorName: {
+    type: String,
+    lowercase: true
+  },
+  pictureUrl: String,
+  healthDescription: String,
+  birthdate: Date,
+  user: {
+    type: import_mongoose3.default.SchemaTypes.ObjectId,
+    ref: "User",
+    required: true
+  }
+});
+var Patient_default = import_mongoose3.default.model("Patient", patientSchema);
+
 // src/routes/exams.ts
 var router = import_express.default.Router();
 router.post("/", async (req, res) => {
-  const newExam = new Exam_default({
-    type: req.body.type,
-    unit: req.body.unit,
-    date: req.body.date,
-    result: req.body.result,
-    patient: req.body.patient
-  });
-  const notificationMessage = generateNotificationMessage(newExam);
-  if (notificationMessage) {
-    const newNotification = new Notification_default({
-      message: notificationMessage,
-      exam: newExam.id
-    });
-    const session = await import_mongoose3.default.startSession();
-    session.startTransaction();
-    try {
-      await newExam.save({ session });
-      await newNotification.save({ session });
-      await session.commitTransaction();
-      res.status(201).json(newExam);
-    } catch {
-      await session.abortTransaction();
-      res.sendStatus(400);
-    } finally {
-      session.endSession();
+  try {
+    const patient = await Patient_default.findById(req.body.patient);
+    if (!patient) {
+      return res.sendStatus(404);
     }
-  } else {
-    try {
+    const newExam = new Exam_default({
+      type: req.body.type,
+      unit: req.body.unit,
+      date: req.body.date,
+      result: req.body.result,
+      patient: req.body.patient
+    });
+    const notificationMessage = generateNotificationMessage(newExam, patient.species);
+    if (notificationMessage) {
+      const newNotification = new Notification_default({
+        message: notificationMessage,
+        exam: newExam.id
+      });
+      const session = await import_mongoose4.default.startSession();
+      session.startTransaction();
+      try {
+        await newExam.save({ session });
+        await newNotification.save({ session });
+        await session.commitTransaction();
+        res.status(201).json(newExam);
+      } catch {
+        await session.abortTransaction();
+        res.sendStatus(400);
+      } finally {
+        session.endSession();
+      }
+    } else {
       await newExam.save();
       res.status(201).json(newExam);
-    } catch (err) {
-      res.sendStatus(400);
     }
+  } catch (error) {
+    res.sendStatus(500);
   }
 });
 router.patch("/:id", getExam, async (req, res) => {
@@ -157,8 +194,8 @@ async function getExam(req, res, next) {
   res.exam = exam;
   next();
 }
-function getExamLimits(examType) {
-  const catsRatesLimits = {
+function getExamLimits(examType, species) {
+  const catLimits = {
     "s\xF3dio": { unit: "mEq/L", min: 145.8, max: 158.7 },
     "cloreto": { unit: "mEq/L", min: 107.5, max: 129.6 },
     "pot\xE1ssio": { unit: "mEq/L", min: 3.8, max: 5.3 },
@@ -166,14 +203,32 @@ function getExamLimits(examType) {
     "c\xE1lcio ionizado": { unit: "mmol/L", min: 1.1, max: 1.4 },
     "f\xF3sforo": { unit: "mg/dL", min: 4, max: 7.3 },
     "magn\xE9sio": { unit: "mg/dL", min: 1.9, max: 2.8 },
-    "press\xE3o arterial": { unit: "mmHg", min: 120, max: 160 },
+    "press\xE3o arterial": { unit: "mmHg", min: 120, max: 140 },
     "ureia": { unit: "mg/dL", min: void 0, max: 60 },
-    "densidade urin\xE1ria": { unit: void 0, min: 1.035, max: void 0 }
+    "densidade urin\xE1ria": { unit: void 0, min: 1.035, max: void 0 },
+    "creatinina": { unit: "mg/dL", min: void 0, max: 1.6 }
   };
-  return catsRatesLimits[examType];
+  const dogLimits = {
+    "s\xF3dio": { unit: "mEq/L", min: 140.3, max: 159.9 },
+    "cloreto": { unit: "mEq/L", min: 102.1, max: 117.4 },
+    "pot\xE1ssio": { unit: "mEq/L", min: 3.8, max: 5.6 },
+    "c\xE1lcio total": { unit: "mg/dL", min: 8.7, max: 11.8 },
+    "c\xE1lcio ionizado": { unit: "mmol/L", min: 1.18, max: 1.4 },
+    "f\xF3sforo": { unit: "mg/dL", min: 2.9, max: 6.2 },
+    "magn\xE9sio": { unit: "mg/dL", min: 1.7, max: 2.7 },
+    "press\xE3o arterial": { unit: "mmHg", min: 120, max: 140 },
+    "ureia": { unit: "mg/dL", min: void 0, max: 60 },
+    "densidade urin\xE1ria": { unit: void 0, min: 1.015, max: void 0 },
+    "creatinina": { unit: "mg/dL", min: void 0, max: 1.4 }
+  };
+  if (species === "felina") {
+    return catLimits[examType];
+  } else if (species === "canina") {
+    return dogLimits[examType];
+  }
 }
-function generateNotificationMessage(exam) {
-  const examLimits = getExamLimits(exam.type);
+function generateNotificationMessage(exam, animalSpecies) {
+  const examLimits = getExamLimits(exam.type, animalSpecies);
   if (!examLimits)
     return void 0;
   let message = `${exam.type}`;
