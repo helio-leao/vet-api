@@ -1,11 +1,28 @@
 import express, { Request, Response, NextFunction } from 'express';
+import path from 'path';
 import mongoose from 'mongoose';
+import multer from 'multer';
 import Exam, { IExam } from '../models/Exam';
 import Notification from '../models/Notification';
 import Patient from '../models/Patient';
 
 const router = express.Router();
 
+
+const storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+      cb(null, path.join(__dirname, '..', '..', 'uploads'));
+    },
+    filename: function (req, file, cb) {
+      cb(null, file.originalname);
+    }
+})
+const upload = multer({ storage });
+
+
+router.post('/upload', upload.single('file'), (req, res) => {
+    res.json(req.file);
+});
 
 router.post('/', async (req, res) => {
     try {
