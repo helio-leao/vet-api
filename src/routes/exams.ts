@@ -1,27 +1,35 @@
 import express, { Request, Response, NextFunction } from 'express';
-import path from 'path';
 import mongoose from 'mongoose';
 import multer from 'multer';
+import pdf from 'pdf-parse';
 import Exam, { IExam } from '../models/Exam';
 import Notification from '../models/Notification';
 import Patient from '../models/Patient';
 
 const router = express.Router();
+const upload = multer({ storage: multer.memoryStorage() });
 
 
-const storage = multer.diskStorage({
-    destination: function (req, file, cb) {
-      cb(null, path.join(__dirname, '..', '..', 'uploads'));
-    },
-    filename: function (req, file, cb) {
-      cb(null, file.originalname);
+router.post('/upload', upload.single('file'), async (req, res) => {
+    const fileBuffer = req.file?.buffer;
+
+    if(!fileBuffer) {
+        return res.sendStatus(400);
     }
-})
-const upload = multer({ storage });
+    
+    const {text} = await pdf(fileBuffer);
 
+    // algorithm specific for a type of file
+    // const DATA = ['ALBUMINA', 'GLOBULINAS', 'CREATININA', 'URÉIA'];
+    // const extractedData = [];
 
-router.post('/upload', upload.single('file'), (req, res) => {
-    res.json(req.file);
+    // const lines = text.trim().split('\n');
+    // lines.forEach(line => {
+    //     const found = DATA.some(k => line.toUpperCase().match(k) !== null);
+    //     console.log(found)
+    // });
+
+    res.json(text);
 });
 
 router.post('/', async (req, res) => {
