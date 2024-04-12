@@ -11,23 +11,12 @@ const upload = multer({ storage: multer.memoryStorage() });
 
 
 router.post('/upload', upload.single('file'), async (req, res) => {
-    const fileBuffer = req.file?.buffer;
+    const file = req.file;
 
-    if(!fileBuffer) {
-        return res.sendStatus(400);
-    }
+    if(!file) return res.sendStatus(400);
+    if(file.mimetype !== 'application/pdf') return res.sendStatus(400);
     
-    const {text} = await pdf(fileBuffer);
-
-    // algorithm specific for a type of file
-    // const DATA = ['ALBUMINA', 'GLOBULINAS', 'CREATININA', 'URÉIA'];
-    // const extractedData = [];
-
-    // const lines = text.trim().split('\n');
-    // lines.forEach(line => {
-    //     const found = DATA.some(k => line.toUpperCase().match(k) !== null);
-    //     console.log(found)
-    // });
+    const {text} = await pdf(file.buffer);
 
     res.json(text);
 });
