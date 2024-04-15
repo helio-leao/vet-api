@@ -1,7 +1,7 @@
 import express, { Request, Response, NextFunction } from 'express';
 import mongoose from 'mongoose';
 import multer from 'multer';
-import pdf from 'pdf-parse';
+import {PDFExtract, PDFExtractOptions} from 'pdf.js-extract';
 import Exam, { IExam } from '../models/Exam';
 import Notification from '../models/Notification';
 import Patient from '../models/Patient';
@@ -11,14 +11,14 @@ const upload = multer({ storage: multer.memoryStorage() });
 
 
 router.post('/upload', upload.single('file'), async (req, res) => {
-    const file = req.file;
+    const {file} = req;
 
     if(!file) return res.sendStatus(400);
     if(file.mimetype !== 'application/pdf') return res.sendStatus(400);
     
-    const {text} = await pdf(file.buffer);
+    const extractedData = await extractPdfData(file.buffer);    // todo: try catch
 
-    res.json(text);
+    res.json(extractedData);
 });
 
 router.post('/', async (req, res) => {
@@ -186,6 +186,35 @@ function generateNotificationMessage(exam: IExam, animalSpecies: ('felina' | 'ca
         return `${message} > ${examLimits.max}${examLimits.unit ? ` ${examLimits.unit}` : ``}`;
     } else {
         return undefined;
+    }
+}
+
+async function extractPdfData(buffer: Buffer) {
+    const DATA = ['ALBUMINA', 'GLOBULINAS', 'URÉIA', 'CREATININA'];
+    const result: {type: string, value: number}[] = [];
+
+    const pdfExtract = new PDFExtract();
+    const options: PDFExtractOptions = {};
+
+    try {
+        const data = await pdfExtract.extractBuffer(buffer, options);
+        const page1Content = data.pages[0].content;
+
+        page1Content.forEach((value, index) => {
+            const found = DATA.some(key => value.str.toUpperCase().match(key) !== null);
+
+            if(found) {
+                result.push({
+                    type: value.str,
+                    value: Number(
+                        page1Content[index + 5].str.replace(',', '.')),
+                });
+            }
+        });
+
+        return result;
+    } catch (error) {
+        throw error;
     }
 }
 
