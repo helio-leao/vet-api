@@ -60,6 +60,7 @@ var notificationSchema = new import_mongoose.default.Schema({
   status: {
     type: String,
     enum: ["UNREAD", "READ"],
+    // todo: change to a boolean (unread)
     default: "UNREAD"
   },
   exam: {

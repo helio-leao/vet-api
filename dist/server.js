@@ -160,6 +160,7 @@ var patientSchema = new import_mongoose2.default.Schema({
   },
   tutorName: {
     type: String,
+    required: true,
     lowercase: true
   },
   pictureUrl: String,
@@ -292,6 +293,8 @@ var patients_default = router2;
 // src/routes/exams.ts
 var import_express3 = __toESM(require("express"));
 var import_mongoose5 = __toESM(require("mongoose"));
+var import_multer = __toESM(require("multer"));
+var import_pdf = require("pdf.js-extract");
 
 // src/models/Notification.ts
 var import_mongoose4 = __toESM(require("mongoose"));
@@ -300,6 +303,7 @@ var notificationSchema = new import_mongoose4.default.Schema({
   status: {
     type: String,
     enum: ["UNREAD", "READ"],
+    // todo: change to a boolean (unread)
     default: "UNREAD"
   },
   exam: {
@@ -312,6 +316,48 @@ var Notification_default = import_mongoose4.default.model("Notification", notifi
 
 // src/routes/exams.ts
 var router3 = import_express3.default.Router();
+var upload = (0, import_multer.default)({ storage: import_multer.default.memoryStorage() });
+router3.post("/upload", upload.single("file"), async (req, res) => {
+  const { file } = req;
+  if (!file || file.mimetype !== "application/pdf") {
+    return res.sendStatus(400);
+  }
+  const session = await import_mongoose5.default.startSession();
+  session.startTransaction();
+  try {
+    const patient = await Patient_default.findById(req.body.patient);
+    if (!patient) {
+      return res.sendStatus(404);
+    }
+    const extractedData = await extractPdfData(file.buffer);
+    const newExams = extractedData.exams.map((exam) => new Exam_default({
+      type: exam.type,
+      unit: exam.unit,
+      date: extractedData.date,
+      result: exam.result,
+      patient: req.body.patient
+    }));
+    const newNotifications = [];
+    newExams.forEach((exam) => {
+      const notificationMessage = generateNotificationMessage(exam, patient.species);
+      if (notificationMessage) {
+        newNotifications.push(new Notification_default({
+          message: notificationMessage,
+          exam: exam.id
+        }));
+      }
+    });
+    await Exam_default.insertMany(newExams, { session });
+    await Notification_default.insertMany(newNotifications, { session });
+    await session.commitTransaction();
+    res.status(201).json({ newExams, newNotifications });
+  } catch (error) {
+    await session.abortTransaction();
+    res.sendStatus(400);
+  } finally {
+    session.endSession();
+  }
+});
 router3.post("/", async (req, res) => {
   try {
     const patient = await Patient_default.findById(req.body.patient);
@@ -337,7 +383,7 @@ router3.post("/", async (req, res) => {
         await newExam.save({ session });
         await newNotification.save({ session });
         await session.commitTransaction();
-        res.status(201).json(newExam);
+        res.status(201).json({ newExam, newNotification });
       } catch {
         await session.abortTransaction();
         res.sendStatus(400);
@@ -346,7 +392,7 @@ router3.post("/", async (req, res) => {
       }
     } else {
       await newExam.save();
-      res.status(201).json(newExam);
+      res.status(201).json({ newExam, newNotification: null });
     }
   } catch (error) {
     res.sendStatus(500);
@@ -451,6 +497,39 @@ function generateNotificationMessage(exam, animalSpecies) {
   } else {
     return void 0;
   }
+}
+async function extractPdfData(buffer) {
+  const DATA = ["albumina", "globulinas", "ureia", "creatinina"];
+  let extractedData = { date: "", exams: [] };
+  const pdfExtract = new import_pdf.PDFExtract();
+  const options = {};
+  try {
+    const data = await pdfExtract.extractBuffer(buffer, options);
+    const page1Content = data.pages[0].content;
+    page1Content.forEach((value, index) => {
+      const stringValue = value.str.toLowerCase();
+      if (stringValue === "data de entrada:") {
+        extractedData.date = formatDateString(page1Content[index - 1].str);
+      }
+      const found = DATA.some((key) => stringValue.match(key) !== null);
+      if (found) {
+        extractedData.exams.push({
+          type: stringValue,
+          unit: page1Content[index + 2].str,
+          result: Number(
+            page1Content[index + 5].str.replace(",", ".")
+          )
+        });
+      }
+    });
+    return extractedData;
+  } catch (error) {
+    throw error;
+  }
+}
+function formatDateString(date) {
+  const parts = date.split("/");
+  return `${parts[2]}-${parts[1]}-${parts[0]}`;
 }
 var exams_default = router3;
 

@@ -52,6 +52,7 @@ var patientSchema = new import_mongoose.default.Schema({
   },
   tutorName: {
     type: String,
+    required: true,
     lowercase: true
   },
   pictureUrl: String,
