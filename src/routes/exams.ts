@@ -9,16 +9,30 @@ import Patient from '../models/Patient';
 const router = express.Router();
 const upload = multer({ storage: multer.memoryStorage() });
 
-
+// todo: add notification
 router.post('/upload', upload.single('file'), async (req, res) => {
     const {file} = req;
 
-    if(!file) return res.sendStatus(400);
-    if(file.mimetype !== 'application/pdf') return res.sendStatus(400);
+    if(!file || file.mimetype !== 'application/pdf') {
+        return res.sendStatus(400);
+    }
     
     const extractedData = await extractPdfData(file.buffer);    // todo: try catch
+    const newExams = extractedData.exams.map(exam => new Exam({
+        type: exam.type,
+        unit: exam.unit,
+        date: extractedData.date,
+        result: exam.result,
+        patient: req.body.patient,
+    }));
 
-    res.json(extractedData);
+    try {
+        // note: insertMany does test constraints but does not pass through middleware like 'pre' and 'post'
+        const savedExams = await Exam.insertMany(newExams);
+        res.json(savedExams);
+    } catch (error) {
+        res.sendStatus(500);
+    }
 });
 
 router.post('/', async (req, res) => {
@@ -190,8 +204,15 @@ function generateNotificationMessage(exam: IExam, animalSpecies: ('felina' | 'ca
 }
 
 async function extractPdfData(buffer: Buffer) {
-    const DATA = ['ALBUMINA', 'GLOBULINAS', 'URÉIA', 'CREATININA'];
-    const result: {type: string, value: number}[] = [];
+    const DATA = ['albumina', 'globulinas', 'uréia', 'creatinina'];
+    let extractedData: {
+        date: string,
+        exams: {
+            type: string,
+            unit: string,
+            result: number
+        }[],
+    } = { date: '', exams: [] };
 
     const pdfExtract = new PDFExtract();
     const options: PDFExtractOptions = {};
@@ -201,21 +222,35 @@ async function extractPdfData(buffer: Buffer) {
         const page1Content = data.pages[0].content;
 
         page1Content.forEach((value, index) => {
-            const found = DATA.some(key => value.str.toUpperCase().match(key) !== null);
+            const stringValue = value.str.toLowerCase();
+
+            // search for date
+            if(stringValue === 'data de entrada:') {
+                extractedData.date = formatDateString(page1Content[index - 1].str);
+            }
+
+            // search for exams
+            const found = DATA.some(key => stringValue.match(key) !== null);
 
             if(found) {
-                result.push({
-                    type: value.str,
-                    value: Number(
+                extractedData.exams.push({
+                    type: stringValue,
+                    unit: page1Content[index + 2].str,
+                    result: Number(
                         page1Content[index + 5].str.replace(',', '.')),
                 });
             }
         });
 
-        return result;
+        return extractedData;
     } catch (error) {
         throw error;
     }
+}
+
+function formatDateString(date: string) {
+    const parts = date.split('/');
+    return `${parts[2]}-${parts[1]}-${parts[0]}`
 }
 
 
