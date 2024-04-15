@@ -3,35 +3,66 @@ import mongoose from 'mongoose';
 import multer from 'multer';
 import {PDFExtract, PDFExtractOptions} from 'pdf.js-extract';
 import Exam, { IExam } from '../models/Exam';
-import Notification from '../models/Notification';
+import Notification, { INotification } from '../models/Notification';
 import Patient from '../models/Patient';
 
 const router = express.Router();
 const upload = multer({ storage: multer.memoryStorage() });
 
-// todo: add notification
+
 router.post('/upload', upload.single('file'), async (req, res) => {
     const {file} = req;
 
     if(!file || file.mimetype !== 'application/pdf') {
         return res.sendStatus(400);
     }
-    
-    const extractedData = await extractPdfData(file.buffer);    // todo: try catch
-    const newExams = extractedData.exams.map(exam => new Exam({
-        type: exam.type,
-        unit: exam.unit,
-        date: extractedData.date,
-        result: exam.result,
-        patient: req.body.patient,
-    }));
 
+    const session = await mongoose.startSession();
+    session.startTransaction();
+    
     try {
-        // note: insertMany does test constraints but does not pass through middleware like 'pre' and 'post'
-        const savedExams = await Exam.insertMany(newExams);
-        res.json(savedExams);
+        // fetch patient related to new exam
+        const patient = await Patient.findById(req.body.patient);
+        
+        if(!patient) {
+            return res.sendStatus(404);
+        }
+
+        // creates exams from pdf data
+        const extractedData = await extractPdfData(file.buffer);
+        const newExams = extractedData.exams.map(exam => new Exam({
+            type: exam.type,
+            unit: exam.unit,
+            date: extractedData.date,
+            result: exam.result,
+            patient: req.body.patient,
+        }));
+
+        // generates notifications
+        const newNotifications: INotification[] = [];
+        newExams.forEach(exam => {
+            const notificationMessage = generateNotificationMessage(exam, patient.species);
+
+            if(notificationMessage) {
+                newNotifications.push(new Notification({
+                    message: notificationMessage,
+                    exam: exam.id,
+                }));
+            }
+        });
+
+        // note: insertMany does test constraints but does not
+        // pass through middleware like 'pre' and 'post'
+        await Exam.insertMany(newExams, { session: session });
+        await Notification.insertMany(newNotifications, { session: session });
+
+        await session.commitTransaction();
+        res.status(201).json({newExams, newNotifications});
     } catch (error) {
-        res.sendStatus(500);
+        await session.abortTransaction();
+        res.sendStatus(400);
+    } finally {
+        session.endSession();
     }
 });
 
@@ -69,8 +100,8 @@ router.post('/', async (req, res) => {
                 await newExam.save({ session: session });
                 await newNotification.save({ session: session });
         
-                await session.commitTransaction();    
-                res.status(201).json(newExam);
+                await session.commitTransaction();
+                res.status(201).json({newExam, newNotification});
             } catch {
                 await session.abortTransaction();
                 res.sendStatus(400);
@@ -79,7 +110,7 @@ router.post('/', async (req, res) => {
             }
         } else {    // adds exam only
             await newExam.save();
-            res.status(201).json(newExam);
+            res.status(201).json({newExam, newNotification: null});
         }
     } catch (error) {
         res.sendStatus(500);
@@ -204,7 +235,7 @@ function generateNotificationMessage(exam: IExam, animalSpecies: ('felina' | 'ca
 }
 
 async function extractPdfData(buffer: Buffer) {
-    const DATA = ['albumina', 'globulinas', 'uréia', 'creatinina'];
+    const DATA = ['albumina', 'globulinas', 'ureia', 'creatinina']; // note: ureia written like 'uréia' on example pdf
     let extractedData: {
         date: string,
         exams: {

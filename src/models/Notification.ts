@@ -1,11 +1,18 @@
 import mongoose from 'mongoose';
+import { Types } from 'mongoose';
 
+
+export interface INotification {
+    message: string,
+    status: 'UNREAD' | 'READ',
+    exam: Types.ObjectId,
+}
 
 const notificationSchema = new mongoose.Schema({
     message: String,
     status: {
         type: String,
-        enum: ['UNREAD', 'READ'],
+        enum: ['UNREAD', 'READ'],   // todo: change to a boolean (unread)
         default: 'UNREAD',
     },
     exam: {
@@ -16,4 +23,4 @@ const notificationSchema = new mongoose.Schema({
 });
 
 
-export default mongoose.model('Notification', notificationSchema);
+export default mongoose.model<INotification>('Notification', notificationSchema);

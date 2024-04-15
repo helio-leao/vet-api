@@ -1,5 +1,16 @@
-import mongoose from 'mongoose';
+import mongoose, { Types } from 'mongoose';
 
+
+export interface IPatient {
+    name: string,
+    species: 'canina' | 'felina',
+    breed?: string,
+    tutorName: string,
+    pictureUrl?: string,
+    healthDescription?: string,
+    birthdate?: Date,
+    user: Types.ObjectId,
+}
 
 const patientSchema = new mongoose.Schema({
     name: {
@@ -19,6 +30,7 @@ const patientSchema = new mongoose.Schema({
     },
     tutorName: {
         type: String,
+        required: true,
         lowercase: true,
     },
     pictureUrl: String,
@@ -32,4 +44,4 @@ const patientSchema = new mongoose.Schema({
 });
 
 
-export default mongoose.model('Patient', patientSchema);
+export default mongoose.model<IPatient>('Patient', patientSchema);
