@@ -300,7 +300,7 @@ function generateNotificationMessage(exam, animalSpecies) {
   }
 }
 async function extractPdfData(buffer) {
-  const DATA = ["albumina", "globulinas", "ureia", "creatinina"];
+  const DATA = ["albumina", "globulinas", "ureia", "ur\xE9ia", "creatinina"];
   let extractedData = { date: "", exams: [] };
   const pdfExtract = new import_pdf.PDFExtract();
   const options = {};
@@ -314,8 +314,9 @@ async function extractPdfData(buffer) {
       }
       const found = DATA.some((key) => stringValue.match(key) !== null);
       if (found) {
+        const formattedType = stringValue === "ur\xE9ia" ? "ureia" : stringValue;
         extractedData.exams.push({
-          type: stringValue,
+          type: formattedType,
           unit: page1Content[index + 2].str,
           result: Number(
             page1Content[index + 5].str.replace(",", ".")

@@ -235,7 +235,7 @@ function generateNotificationMessage(exam: IExam, animalSpecies: ('felina' | 'ca
 }
 
 async function extractPdfData(buffer: Buffer) {
-    const DATA = ['albumina', 'globulinas', 'ureia', 'creatinina']; // note: ureia written like 'uréia' on example pdf
+    const DATA = ['albumina', 'globulinas', 'ureia', 'uréia', 'creatinina'];
     let extractedData: {
         date: string,
         exams: {
@@ -264,8 +264,10 @@ async function extractPdfData(buffer: Buffer) {
             const found = DATA.some(key => stringValue.match(key) !== null);
 
             if(found) {
+                const formattedType = stringValue === 'uréia' ? 'ureia' : stringValue;
+
                 extractedData.exams.push({
-                    type: stringValue,
+                    type: formattedType,
                     unit: page1Content[index + 2].str,
                     result: Number(
                         page1Content[index + 5].str.replace(',', '.')),
