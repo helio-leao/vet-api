@@ -1,10 +1,38 @@
 import express, { Request, Response, NextFunction } from 'express';
+import { v2 as cloudinary } from 'cloudinary';
+import multer from 'multer';
 import authenticateToken from '../middlewares/authenticateToken';
 import Patient from '../models/Patient';
 import Exam from '../models/Exam';
 
+// todo: delete images updated or deleted
+
 const router = express.Router();
 
+cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_SECRET_KEY,
+});
+
+const storage = multer.diskStorage({
+    filename: function(_req, file, cb) {
+        cb(null, file.originalname);
+    }
+});
+const upload = multer({storage});
+
+
+router.post('/picture', upload.single('picture'), async (req, res) => {
+    try {
+        if(req.file) {
+            const response = await cloudinary.uploader.upload(req.file.path);
+            res.json(response);
+        }        
+    } catch {
+        res.sendStatus(500);
+    }
+});
 
 router.get('/:id/exams', async (req, res) => {
     try {
